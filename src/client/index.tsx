@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
-import React, { useState } from "react";
+import * as React from "react";
+import { useState } from "react";
 import {
 	BrowserRouter,
 	Routes,
@@ -20,13 +21,14 @@ function App() {
 	const socket = usePartySocket({
 		party: "chat",
 		room,
-		onMessage: (evt) => {
+		onMessage: (evt: MessageEvent) => {
 			const message = JSON.parse(evt.data as string) as Message;
 			if (message.type === "add") {
-				const foundIndex = messages.findIndex((m) => m.id === message.id);
+				const foundIndex = messages.findIndex(
+					(m: ChatMessage) => m.id === message.id,
+				);
 				if (foundIndex === -1) {
-					// probably someone else who added a message
-					setMessages((messages) => [
+					setMessages((messages: ChatMessage[]) => [
 						...messages,
 						{
 							id: message.id,
@@ -36,10 +38,7 @@ function App() {
 						},
 					]);
 				} else {
-					// this usually means we ourselves added a message
-					// and it was broadcasted back
-					// so let's replace the message with the new message
-					setMessages((messages) => {
+					setMessages((messages: ChatMessage[]) => {
 						return messages
 							.slice(0, foundIndex)
 							.concat({
@@ -52,8 +51,8 @@ function App() {
 					});
 				}
 			} else if (message.type === "update") {
-				setMessages((messages) =>
-					messages.map((m) =>
+				setMessages((messages: ChatMessage[]) =>
+					messages.map((m: ChatMessage) =>
 						m.id === message.id
 							? {
 									id: message.id,
@@ -71,28 +70,31 @@ function App() {
 	});
 
 	return (
-		<div className="chat container">
-			{messages.map((message) => (
-				<div key={message.id} className="row message">
-					<div className="two columns user">{message.user}</div>
-					<div className="ten columns">{message.content}</div>
-				</div>
-			))}
+		<div className="chat-container">
+			<div className="messages-list">
+				{messages.map((message: ChatMessage) => (
+					<div key={message.id} className="message-entry">
+						<div className="username">{message.user}</div>
+						<div className="content">{message.content}</div>
+					</div>
+				))}
+			</div>
 			<form
-				className="row"
-				onSubmit={(e) => {
+				className="input-form"
+				onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
 					e.preventDefault();
 					const content = e.currentTarget.elements.namedItem(
 						"content",
 					) as HTMLInputElement;
+					if (!content.value.trim()) return;
+
 					const chatMessage: ChatMessage = {
 						id: nanoid(8),
 						content: content.value,
 						user: name,
 						role: "user",
 					};
-					setMessages((messages) => [...messages, chatMessage]);
-					// we could broadcast the message here
+					setMessages((messages: ChatMessage[]) => [...messages, chatMessage]);
 
 					socket.send(
 						JSON.stringify({
@@ -107,12 +109,12 @@ function App() {
 				<input
 					type="text"
 					name="content"
-					className="ten columns my-input-text"
-					placeholder={`Hello ${name}! Type a message...`}
+					className="chat-input"
+					placeholder={`COMMAND > Hello ${name}...`}
 					autoComplete="off"
 				/>
-				<button type="submit" className="send-message two columns">
-					Send
+				<button type="submit" className="send-btn">
+					SEND
 				</button>
 			</form>
 		</div>
