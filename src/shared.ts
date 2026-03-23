@@ -25,6 +25,23 @@ export type Message =
 			messages: ChatMessage[];
 	  };
 
+// ---------------------------------------------------------------------------
+// LFG Types (REST API — no more string packing)
+// ---------------------------------------------------------------------------
+export interface LfgMission {
+	room: string;
+	username: string;
+	konamiId: string;
+	postedAt: number;
+}
+
+export interface PlayerProfile {
+	username: string;
+	konamiId: string;
+	university: string;
+	instagram: string;
+}
+
 export const names = [
 	"Alice",
 	"Bob",

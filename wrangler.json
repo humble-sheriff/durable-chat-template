@@ -4,7 +4,9 @@
 	"name": "durable-chat-template",
 	"migrations": [
 		{
-			"new_sqlite_classes": ["Chat"],
+			"new_sqlite_classes": [
+				"Chat"
+			],
 			"tag": "v1"
 		}
 	],
@@ -24,6 +26,19 @@
 			}
 		]
 	},
+	"kv_namespaces": [
+		{
+			"binding": "LFG_BOARD",
+			"id": "83ddc11601bb42d39b0defdc3866c25d"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "PLAYER_DB",
+			"database_name": "player-db",
+			"database_id": "de80a2f5-1ea7-42e5-b9bb-d61b8d39ef42"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},

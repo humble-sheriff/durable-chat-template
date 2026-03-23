@@ -42,36 +42,8 @@
 			<div class="corner bottom-left"></div>
 			<div class="corner bottom-right"></div>
 			
-			<div class="container main-layout">
-				<div class="row">
-					<div class="one-third column description-panel">
-						<div class="panel-content">
-							<h4 class="retro-title"><b>TACTICAL CHAT</b></h4>
-							<p class="retro-subtitle">POWERED BY DURABLE OBJECTS</p>
-							<div class="divider"></div>
-							<p class="description-text">
-								Real-time synchronization across edge locations.
-								Each room is a persistent state instance.
-							</p>
-							<div class="match-timer">LIVE: 90:00+</div>
-							<div class="pitch-container">
-								<div class="goal-box goal-top"></div>
-								<div class="goal-box goal-bottom"></div>
-							</div>
-							<div class="stats-panel">
-								<div class="status-item">
-									<span class="status-dot"></span>
-									<span class="status-label">ENCRYPTION: ACTIVE</span>
-								</div>
-								<div class="status-item">
-									<span class="status-dot" style="background: var(--kenya-red); box-shadow: 0 0 6px var(--kenya-red);"></span>
-									<span class="status-label">MATCH STATUS: KICKOFF</span>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="two-thirds column chat-panel" id="root"></div>
-				</div>
+			<div class="container main-layout" id="root">
+				<!-- React mounts here and manages the entire tactical dashboard row -->
 			</div>
 		</div>
 

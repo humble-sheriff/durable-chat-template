@@ -60,6 +60,7 @@ body, html {
   border-radius: 50%;
   filter: blur(40px);
   z-index: 1;
+  pointer-events: none; /* FIX: Prevent this from blocking clicks */
 }
 
 .background-accents {
@@ -95,6 +96,7 @@ body, html {
   z-index: 5;
   animation: scan 8s linear infinite;
   opacity: 0.5;
+  pointer-events: none; /* FIX: Prevent scanline from blocking clicks */
 }
 
 @keyframes scan {
@@ -135,6 +137,7 @@ body, html {
   background: var(--retro-panel);
   position: relative;
   box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  z-index: 10; /* Ensure main layout is above background art */
 }
 
 /* Kenyan Flag Strip Accent */
@@ -431,13 +434,32 @@ body, html {
     flex-direction: column !important;
     margin: 0 !important;
     max-width: none !important;
+    position: fixed !important; /* Force to viewport */
+    top: 0 !important;
+    left: 0 !important;
   }
   
-  /* Override Skeleton floats for mobile */
-  .row, .column, .columns {
+  /* Kill Skeleton interference completely on mobile */
+  .container.main-layout {
+    padding: 0 !important;
+  }
+  
+  .row {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
     width: 100% !important;
-    margin-left: 0 !important;
+    height: 100% !important;
+  }
+  
+  .column, .columns {
+    width: 100% !important;
+    margin: 0 !important;
     float: none !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   .main-layout::before {
@@ -450,7 +472,6 @@ body, html {
 
   .chat-panel {
     width: 100% !important;
-    margin-left: 0 !important;
     height: 100% !important;
     flex: 1 !important;
     display: flex !important;
@@ -469,36 +490,38 @@ body, html {
   .messages-list {
     flex: 1 !important;
     overflow-y: auto !important;
-    margin-bottom: 15px !important;
+    margin-bottom: 0 !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
   .input-form {
     padding: 15px 10px !important;
-    background: rgba(0,0,0,0.5) !important;
-    border-top: 1px solid var(--retro-border) !important;
-    margin-top: auto !important;
+    background: rgba(10,10,10,0.95) !important;
+    border-top: 2px solid var(--retro-border) !important;
     display: flex !important;
-    flex-direction: column !important; /* FORCE VERTICAL STACK */
-    gap: 15px !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-top: auto !important; /* Ensure it sticks to bottom */
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .chat-input {
     width: 100% !important;
-    margin: 0 !important; /* Reset Skeleton margin */
-    height: 48px !important;
+    margin: 0 !important;
+    height: 50px !important;
     font-size: 16px !important;
     box-sizing: border-box !important;
   }
 
   .send-btn {
     width: 100% !important;
-    height: 52px !important;
+    height: 50px !important;
     margin: 0 !important;
     box-shadow: 0 4px 0px #8a150a !important;
-    letter-spacing: 3px !important;
     box-sizing: border-box !important;
+    pointer-events: auto !important; /* Explicitly allow events */
   }
   
   .corner {
@@ -507,18 +530,545 @@ body, html {
   
   .message-entry {
     padding: 12px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 8px !important;
     background: rgba(255,255,255,0.03) !important;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Onboarding Modal
+   ----------------------------------------------------------------------------- */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.onboarding-modal {
+  width: 100%;
+  max-width: 380px; /* MEDIUM SIZE */
+  background: var(--retro-panel);
+  border: 1px solid var(--kenya-red);
+  box-shadow: 0 0 30px rgba(187, 30, 16, 0.2);
+  padding: 30px; /* Tighter padding */
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.warning-blip {
+  width: 15px;
+  height: 15px;
+  background: var(--kenya-red);
+  box-shadow: 0 0 10px var(--kenya-red);
+  animation: pulse 1s infinite;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field {
+  margin-bottom: 25px;
+}
+
+.form-notice {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--kenya-green);
+  opacity: 0.8;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.form-field label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--kenya-green);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.form-field input {
+  width: 100%;
+  background: #000 !important;
+  border: 1px solid var(--retro-border) !important;
+  color: white !important;
+  padding: 12px 15px !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-size: 16px !important;
+  outline: none;
+  transition: all 0.3s;
+  box-sizing: border-box !important;
+}
+
+.form-field input:focus {
+  border-color: var(--kenya-red) !important;
+  box-shadow: inset 0 0 10px rgba(187, 30, 16, 0.1) !important;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-row .form-field {
+  flex: 1;
+}
+
+/* Scanning Sequence */
+.scanning-container {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--retro-border);
+}
+
+.scanning-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--kenya-red);
+  box-shadow: 0 0 15px var(--kenya-red);
+  animation: scanModal 2s linear infinite;
+}
+
+@keyframes scanModal {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(200px); }
+  100% { transform: translateY(0); }
+}
+
+.status-text {
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.status-sub {
+  font-size: 12px;
+  color: #666;
+}
+
+.success-container {
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* Tactical HUD */
+.tactical-hud {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--retro-border);
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 3px solid var(--kenya-green);
+}
+
+.hud-label {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--kenya-white);
+  letter-spacing: 1px;
+}
+
+.hud-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 10px;
+  color: #666;
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+.hud-meta span {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+/* -----------------------------------------------------------------------------
+   Advanced Tactical Comms (Replies & Profiles)
+   ----------------------------------------------------------------------------- */
+
+.clickable {
+  cursor: pointer;
+  text-decoration: underline dotted rgba(187, 30, 16, 0.3);
+  transition: all 0.2s;
+}
+
+.clickable:hover {
+  color: var(--kenya-green) !important;
+  text-decoration: underline solid var(--kenya-green);
+}
+
+.username-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.reply-btn {
+  font-size: 9px;
+  color: #555;
+  cursor: pointer;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.message-entry:hover .reply-btn {
+  color: var(--kenya-green);
+  border-color: rgba(26, 127, 55, 0.3);
+}
+
+.reply-quote {
+  background: rgba(255,255,255,0.03);
+  border-left: 2px solid var(--kenya-red);
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #777;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.reply-marker {
+  color: var(--kenya-red);
+  font-weight: bold;
+  font-style: normal;
+  margin-right: 5px;
+}
+
+/* Reply Preview HUD */
+.reply-preview {
+  background: rgba(187, 30, 16, 0.1);
+  border: 1px solid var(--kenya-red);
+  border-bottom: none;
+  padding: 10px 15px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--kenya-red);
+  letter-spacing: 1px;
+}
+
+.preview-text {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cancel-reply {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  cursor: pointer;
+  color: var(--kenya-red);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Profile Data Grid */
+.profile-data-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.data-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.data-row label {
+  font-size: 10px;
+  color: var(--kenya-green);
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.data-row span {
+  font-size: 16px;
+  color: var(--kenya-white);
+  font-family: monospace;
+}
+
+
+@media (max-width: 800px) {
+  .onboarding-overlay {
+    align-items: center !important; /* Re-center with the smaller size */
+    overflow-y: auto !important;
+    padding: 15px !important;
     display: flex !important;
+    justify-content: center !important;
+  }
+  
+  .onboarding-modal, 
+  .onboarding-modal * {
+    box-sizing: border-box !important;
+  }
+
+  .onboarding-modal {
+    padding: 25px 20px !important;
+    margin: 30px auto !important; /* Balanced margin */
+    max-height: 92vh !important;
+    width: auto !important;
+    max-width: min(350px, calc(100vw - 32px)) !important; /* Tighter Medium Size */
+    border-radius: 4px;
+    float: none !important;
+  }
+  
+  .form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  
+  .form-field {
+    margin-bottom: 20px !important;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   LFG Radar & Mission Board
+   ----------------------------------------------------------------------------- */
+.lfg-board {
+  margin-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lfg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.post-lfg-btn {
+  background: var(--kenya-green);
+  color: white;
+  border: none;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 0px #135d29;
+}
+
+.post-lfg-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0px #135d29;
+}
+
+.mission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mission-card {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--retro-border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  border-left: 2px solid var(--kenya-red);
+}
+
+.mission-mode {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kenya-white);
+}
+
+.mission-user {
+  font-size: 9px;
+  color: #666;
+}
+
+.mission-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #888;
+}
+
+.status-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.status-led.green { background: var(--kenya-green); box-shadow: 0 0 5px var(--kenya-green); }
+.status-led.red { background: var(--kenya-red); box-shadow: 0 0 5px var(--kenya-red); }
+
+.join-mission-btn {
+  background: var(--kenya-white);
+  color: var(--kenya-black);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px;
+  margin-top: 4px;
+  transition: all 0.2s;
+}
+
+.join-mission-btn:hover {
+  background: var(--kenya-green);
+  color: white;
+}
+
+.no-missions {
+  font-size: 12px;
+  color: #444;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.tactical-select {
+  width: 100%;
+  background: #000 !important;
+  border: 1px solid var(--retro-border) !important;
+  color: white !important;
+  padding: 12px 10px !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  outline: none;
+}
+
+/* Mobile Toggles */
+.mobile-only { display: none !important; }
+.desktop-only { display: block; }
+
+.lfg-toggle-btn {
+  background: var(--kenya-red);
+  border: none;
+  color: white;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 4px 8px;
+  margin-left: 10px;
+}
+
+@media (max-width: 800px) {
+  .mobile-only { display: inline-block !important; }
+  .desktop-only { display: none !important; }
+
+  .description-panel.show-mobile {
+    display: flex !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999; /* Above everything */
+    background: var(--retro-panel) !important;
+    padding: 30px !important;
+    overflow-y: auto !important;
     flex-direction: column !important;
   }
-  
-  .username {
-    margin-bottom: 4px !important;
-    font-size: 12px !important;
-  }
-  
-  .content {
-    font-size: 15px !important;
-  }
+}
+
+.mission-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--kenya-red);
+  text-align: center;
+  border: 1px dotted var(--kenya-red);
+  padding: 3px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.admin-close-btn {
+  background: none;
+  border: 1px solid var(--kenya-red);
+  color: var(--kenya-red);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  margin-left: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tactical-alert {
+  border-color: var(--kenya-red) !important;
+  background: rgba(0,0,0,0.95) !important;
+}
+
+.alert-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--kenya-white);
+  margin: 20px 0;
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.warning-blip.pulse {
+  animation: blip-pulse 1s infinite alternate;
+}
+
+@keyframes blip-pulse {
+  from { opacity: 0.5; box-shadow: 0 0 5px var(--kenya-red); }
+  to { opacity: 1; box-shadow: 0 0 20px var(--kenya-red); }
 }
