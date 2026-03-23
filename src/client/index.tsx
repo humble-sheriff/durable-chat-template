@@ -123,13 +123,26 @@ function useLfgBoard(intervalMs = 8000) {
 		setMissions(data);
 	}, []);
 
+	// Optimistically add a mission to local state (instant feedback)
+	const addOptimistic = useCallback((mission: LfgMission) => {
+		setMissions(prev => {
+			const filtered = prev.filter(m => m.room !== mission.room);
+			return [mission, ...filtered];
+		});
+	}, []);
+
+	// Optimistically remove a mission from local state
+	const removeOptimistic = useCallback((room: string) => {
+		setMissions(prev => prev.filter(m => m.room !== room));
+	}, []);
+
 	useEffect(() => {
 		refresh(); // Immediate first fetch
 		const id = setInterval(refresh, intervalMs);
 		return () => clearInterval(id);
 	}, [refresh, intervalMs]);
 
-	return { missions, refresh };
+	return { missions, refresh, addOptimistic, removeOptimistic };
 }
 
 function useLfgAlerts(username: string | undefined, onAlert: (msg: string) => void) {
@@ -449,7 +462,7 @@ function App() {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 
 	// LFG Board — polling via REST (replaces the LFG_HUB WebSocket)
-	const { missions: lfgMissions, refresh: refreshLfg } = useLfgBoard(8000);
+	const { missions: lfgMissions, refresh: refreshLfg, addOptimistic, removeOptimistic } = useLfgBoard(8000);
 
 	// LFG Alerts — polling for commander notifications
 	useLfgAlerts(profile?.username, (msg) => {
@@ -519,9 +532,18 @@ function App() {
 					currentRoom={room || "lobby"}
 					onClose={() => setShowLfgForm(false)}
 					onPost={async () => {
-						await api.postMission(room || "lobby", profile.username, profile.konamiId);
+						const currentRoom = room || "lobby";
+						// Optimistic: show mission instantly for the poster
+						addOptimistic({
+							room: currentRoom,
+							username: profile.username,
+							konamiId: profile.konamiId,
+							postedAt: Date.now(),
+						});
 						setShowLfgForm(false);
-						refreshLfg(); // Immediately refresh the board
+						setTacticalAlert("SIGNAL BROADCASTED SUCCESSFULLY. AWAITING SQUAD MATES...");
+						// Fire to server in background
+						api.postMission(currentRoom, profile.username, profile.konamiId);
 					}}
 				/>
 			)}
@@ -548,18 +570,18 @@ function App() {
 							return;
 						}
 
-						// 2. Copy commander username to clipboard
+						// 2. Optimistic: remove from local board instantly
+						removeOptimistic(m.room);
+
+						// 3. Copy commander username to clipboard
 						navigator.clipboard.writeText(result.commander).catch(() => {});
 
-						// 3. Show local instruction
+						// 4. Show local instruction
 						setTacticalAlert("THE USERNAME HAS BEEN COPIED TO YOUR CLIPBOARD. SEARCH THE USERNAME, SEND A FRIEND REQUEST AND WAIT FOR THE OTHER MEMBER TO DECIDE THE MATCH (5 MINS LATEST).");
 
-						// 4. Navigate to the mission room
+						// 5. Navigate to the mission room
 						navigate(`/${m.room}`);
 						setShowLfgMobile(false);
-
-						// 5. Refresh board
-						refreshLfg();
 					}}
 				/>
 
@@ -596,8 +618,9 @@ function App() {
 							<button 
 								className="admin-close-btn" 
 								onClick={async () => {
-									await api.closeMission(room || "");
-									refreshLfg();
+									const currentRoom = room || "";
+									removeOptimistic(currentRoom);
+									await api.closeMission(currentRoom);
 								}}
 							>
 								[CLOSE MISSION]
